@@ -4,7 +4,7 @@ extends SceneTree
 ## room scenes. Content needs rules too, and a check proves them for every seed, not for the lucky seed 42:
 ## props must never block the way, never sit on a key or in a door, and a rare room must stay rare.
 ##
-##   godot --headless --path godot/11-numbered-doors -s res://steps/step_01_label_on_the_leaf/check_contents.gd
+##   godot --headless --path godot/10-numbered-doors -s res://steps/step_01_label_on_the_leaf/check_contents.gd
 ##
 ## Option: `-- --seeds=200` checks seeds 1 to 200 only. The exit code is 0 if every seed passes and
 ## 1 if any fails, so a build server can run it. The solvability rules of check_solvable.gd are
@@ -31,7 +31,7 @@ class Layout:
 	var key_spots: Array[Vector2] = []
 	var key_ways: Array[PackedVector2Array] = [] ## From the entrance to each key spot, and from each key spot to the exit.
 	var door_zones: Array[Rect2] = [] ## The exit door's trigger and swing, and the swing of the door in the entrance.
-	var fixtures: Array[Rect2] = [] ## What stands in the room for good: the vault's pillars and platform, the kit pieces in Shell/Fixtures.
+	var fixtures: Array[Rect2] = [] ## What stands in the room for good: the vault's pillars and platform.
 	var prop_spots: Array[Transform3D] = []
 
 func _initialize() -> void:
@@ -187,10 +187,12 @@ static func read_layouts() -> Array[Layout]:
 				layout.key_ways.append(corridor(key, _flat(exit_marker.position), KEY_WAY_WIDTH))
 			for spot in room.get_node("PropSpots").get_children():
 				layout.prop_spots.append((spot as Marker3D).transform)
-		var fixtures := room.get_node_or_null("Shell/Fixtures") # kit pieces: the vault's pillars and plinths, the goal pad
-		if fixtures != null:
-			for piece: Node3D in fixtures.get_children():
-				layout.fixtures.append(_collider_rect(piece))
+		for part in room.get_node("Shell").get_children():
+			if part is CSGBox3D and not (part.name == &"Floor" or part.name.begins_with("Wall")):
+				layout.fixtures.append(_rect(part.transform, (part as CSGBox3D).size / 2.0))
+			elif part is CSGCylinder3D:
+				var radius := (part as CSGCylinder3D).radius
+				layout.fixtures.append(_rect(part.transform, Vector3(radius, 0.0, radius)))
 		layouts.append(layout)
 		room.free()
 	door.free()
@@ -225,19 +227,6 @@ static func footprint(scene: PackedScene, spot: Transform3D) -> Rect2:
 	prop.free()
 	_footprints[key] = covered
 	return covered
-
-## The rectangle a kit piece's colliders cover on the floor of the room it stands in.
-static func _collider_rect(piece: Node3D) -> Rect2:
-	var low := Vector2(INF, INF)
-	var high := Vector2(-INF, -INF)
-	for node in piece.find_children("*", "CollisionShape3D", true, false):
-		var shape_node := node as CollisionShape3D
-		var to_room := piece.transform * (shape_node.get_parent() as Node3D).transform * shape_node.transform
-		for point in (shape_node.shape as ConcavePolygonShape3D).get_faces():
-			var placed := to_room * point
-			low = low.min(Vector2(placed.x, placed.z))
-			high = high.max(Vector2(placed.x, placed.z))
-	return Rect2(low, high - low)
 
 ## The rectangle a box shape covers on the floor; parent_to_room brings the shape's parent into the room's space.
 static func _shape_rect(parent_to_room: Transform3D, shape_node: CollisionShape3D) -> Rect2:

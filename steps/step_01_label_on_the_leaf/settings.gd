@@ -1,15 +1,14 @@
 extends RefCounted
 ## The player's settings, saved as JSON like the best times:
-##   {"formatVersion": 1, "settings": {"masterVolume": 0.8, "sfxVolume": 1.0, "ambienceVolume": 1.0, "headBob": true, "fovKick": false}}
+##   {"formatVersion": 1, "settings": {"masterVolume": 0.8, "sfxVolume": 1.0, "headBob": true, "fovKick": false}}
 ## Loading never fails: no file is the defaults, a value of the wrong kind is its default, and a file that cannot be
 ## read is kept as <name>.bad while the settings start from the defaults. A save writes back everything that was in the file.
 
 const FORMAT_VERSION := 1
-const DEFAULTS := {"masterVolume": 1.0, "sfxVolume": 1.0, "ambienceVolume": 1.0, "headBob": true, "fovKick": true}
+const DEFAULTS := {"masterVolume": 1.0, "sfxVolume": 1.0, "headBob": true, "fovKick": true}
 
 var master_volume := 1.0 ## 0 silent to 1 full, for the bus Master.
 var sfx_volume := 1.0 ## For the bus SFX: doors, the lock, the key, the footsteps.
-var ambience_volume := 1.0 ## For the bus Ambience: the room tone.
 var head_bob := true
 var fov_kick := true
 
@@ -24,7 +23,6 @@ func save() -> void:
 	var values: Dictionary = _data.get_or_add("settings", {})
 	values["masterVolume"] = master_volume
 	values["sfxVolume"] = sfx_volume
-	values["ambienceVolume"] = ambience_volume
 	values["headBob"] = head_bob
 	values["fovKick"] = fov_kick
 	_data["formatVersion"] = maxi(FORMAT_VERSION, int(_data.get("formatVersion", 0))) # never lower it
@@ -37,13 +35,12 @@ func _load() -> void:
 		if readable and json.data is Dictionary and (json.data as Dictionary).get("settings", {}) is Dictionary:
 			_data = json.data
 		else:
-			# Never delete what cannot be read: keep it for a human and start from the defaults.
+			# Never delete what cannot be read: keep it to look at later and start from the defaults.
 			push_warning("settings: %s cannot be read, kept as %s.bad" % [_path, _path])
 			DirAccess.rename_absolute(_path, _path + ".bad")
 	var values: Dictionary = _data.get("settings", {})
 	master_volume = _volume(values, "masterVolume")
 	sfx_volume = _volume(values, "sfxVolume")
-	ambience_volume = _volume(values, "ambienceVolume")
 	head_bob = _switch(values, "headBob")
 	fov_kick = _switch(values, "fovKick")
 

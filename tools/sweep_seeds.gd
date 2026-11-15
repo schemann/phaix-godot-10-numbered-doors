@@ -1,16 +1,16 @@
 extends SceneTree
-## Walks the autopilot through the finished game (step 4) for a range of seeds and writes one line per seed to a file:
+## Walks the autopilot through the finished game (step 3) for a range of seeds and writes one line per seed to a file:
 ##   ok <seed> <ticks> <doors>               the player stood on the goal pad, after going through that many doors
 ##   held <seed> <room> <local position> <ticks>   the player stopped moving, or the run took too long
 ## and, before that seed's line, one line for every door whose number was wrong:
 ##   numbers <seed> <room> <what the door said and what it should have said>
-## and "done" as the last line. The test suite starts several of these side by side (tests/run_tests.gd).
-##   godot --headless --path godot/11-numbered-doors -s res://tools/sweep_seeds.gd -- --from=1 --to=50 --out=/tmp/sweep.txt
+## and "done" as the last line. The test suite starts several of these side by side (tests/run_tests.gd, test_autopilot_seed_sweep).
+##   godot --headless --path godot/10-numbered-doors -s res://tools/sweep_seeds.gd -- --from=1 --to=50 --out=/tmp/sweep.txt
 ## The ticks are the same 1/60 s ones at any speed, so a seed walks the same way fast or slow. The speed is the engine's own
 ## limit of 8 physics steps per frame: faster than that Jolt warns about running out of jobs.
 
 const Autopilot := preload("res://tools/autopilot.gd")
-const FINAL_SCENE := "res://steps/step_03_readability_pass/main.tscn"
+const FINAL_SCENE := "res://steps/step_03_number_plate/main.tscn"
 const SPEED_UP := 8 ## Times real time.
 const STATE_FINISHED := 2 ## Level.State.FINISHED
 const STALL_TICKS := 120 ## A run that has not moved for this many ticks (2 s) is held in place.
@@ -58,14 +58,14 @@ func _initialize() -> void:
 	await process_frame
 	quit(0)
 
-## The number on the door of a room, "" for a room without a door (the goal room).
+## The number on the door of a room, "" for a room without a door (the goal room). Step 3 writes four digits: "0005".
 func _number_on(room: Node3D) -> String:
 	var door := room.get("door") as Node3D
 	return (door.get_node("Hinge/Number") as Label3D).text if door != null else ""
 
 ## One seed from the first door to the goal pad. Returns the lines for the result file.
 func _walk(chain_seed: int) -> Array[String]:
-	var save_path := OS.get_temp_dir().path_join("phaix-godot-11-sweep-%d-%d.json" % [OS.get_process_id(), chain_seed]) # one file per worker: two sweeps at the same time must not share a save file
+	var save_path := OS.get_temp_dir().path_join("phaix-godot-10-sweep-%d-%d.json" % [OS.get_process_id(), chain_seed]) # one file per worker: two sweeps at the same time must not share a save file
 	var main := (load(FINAL_SCENE) as PackedScene).instantiate()
 	var level: Node3D = main.get_node("Level")
 	level.set("save_path", save_path)
@@ -83,7 +83,7 @@ func _walk(chain_seed: int) -> Array[String]:
 			return
 		var said := _number_on(level.rooms[index - 1])
 		run["doors"] += 1
-		if said != str(index) or room_label.text != "Room %d / %d" % [index, level.chain.goal_index]:
+		if said != "%04d" % index or room_label.text != "Room %d / %d" % [index, level.chain.goal_index]:
 			(run["numbers"] as Array[String]).append("numbers %d %d the door said \"%s\", the HUD says \"%s\"" % [chain_seed, index - 1, said, room_label.text]))
 	var driver := Driver.new()
 	driver.process_priority = -100
@@ -93,8 +93,8 @@ func _walk(chain_seed: int) -> Array[String]:
 		var at: Vector3 = level.player.global_position
 		for index: int in level.rooms: # every door that exists says its plan's number, whatever was freed or built before
 			var said := _number_on(level.rooms[index])
-			if level.rooms[index].door != null and said != str(level.chain.plans[index].index + 1) and (run["numbers"] as Array[String]).size() < 3:
-				(run["numbers"] as Array[String]).append("numbers %d %d the door says \"%s\", the plan says %d" % [chain_seed, index, said, level.chain.plans[index].index + 1])
+			if level.rooms[index].door != null and said != "%04d" % (level.chain.plans[index].index + 1) and (run["numbers"] as Array[String]).size() < 3:
+				(run["numbers"] as Array[String]).append("numbers %d %d the door says \"%s\", the plan says %04d" % [chain_seed, index, said, level.chain.plans[index].index + 1])
 		run["still"] = run["still"] + 1 if at.distance_to(run["last"]) < STALL_DISTANCE else 0
 		run["last"] = at
 		return level.state == STATE_FINISHED or run["still"] >= STALL_TICKS or run["ticks"] >= BUDGET

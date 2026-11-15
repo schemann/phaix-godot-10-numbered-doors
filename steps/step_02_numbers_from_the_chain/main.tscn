@@ -1,6 +1,7 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://steps/step_02_numbers_from_the_chain/level.gd" id="1_level"]
+[ext_resource type="Script" path="res://steps/step_02_numbers_from_the_chain/room_camera.gd" id="9_camera"]
 
 [ext_resource type="Script" path="res://steps/step_02_numbers_from_the_chain/debug_map.gd" id="2_map"]
 
@@ -13,10 +14,6 @@
 [ext_resource type="Script" path="res://steps/step_02_numbers_from_the_chain/lines.gd" id="6_lines"]
 
 [ext_resource type="Script" path="res://steps/step_02_numbers_from_the_chain/generation_watch.gd" id="7_watch"]
-
-[ext_resource type="Script" path="res://steps/step_02_numbers_from_the_chain/quality.gd" id="8_quality"]
-
-[ext_resource type="AudioStream" path="res://sounds/room_tone.wav" id="9_tone"]
 
 [ext_resource type="Script" path="res://steps/step_02_numbers_from_the_chain/settings_menu.gd" id="10_settings"]
 
@@ -31,44 +28,42 @@ content_margin_top = 28.0
 content_margin_right = 48.0
 content_margin_bottom = 28.0
 
-[sub_resource type="Environment" id="Environment_interior"]
+[sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
-background_color = Color(0.03, 0.03, 0.035, 1)
+background_color = Color(0.02, 0.02, 0.025, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.52, 0.5, 0.47, 1)
-ambient_light_energy = 0.7
-reflected_light_source = 1
-tonemap_mode = 4
-tonemap_agx_contrast = 1.5
-glow_enabled = true
-glow_intensity = 0.6
-glow_hdr_threshold = 1.0
+ambient_light_color = Color(0.5, 0.55, 0.7, 1)
+ambient_light_energy = 0.02
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.09, 0.1, 0.13, 1)
+fog_density = 0.03
 volumetric_fog_enabled = true
-volumetric_fog_density = 0.012
-volumetric_fog_albedo = Color(0.92, 0.92, 0.94, 1)
-volumetric_fog_anisotropy = 0.4
-volumetric_fog_length = 24.0
-volumetric_fog_ambient_inject = 0.1
-volumetric_fog_sky_affect = 0.0
+volumetric_fog_density = 0.07
+volumetric_fog_albedo = Color(0.85, 0.88, 0.95, 1)
+volumetric_fog_length = 30.0
+glow_enabled = true
+glow_strength = 2.0
 sdfgi_enabled = true
 sdfgi_use_occlusion = true
 sdfgi_read_sky_light = false
-sdfgi_y_scale = 0
-sdfgi_energy = 1.6
+sdfgi_cascades = 2
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_gizmos"]
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_watch"]
 
 [node name="Main" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_interior")
+environment = SubResource("Environment_main")
 
 [node name="Level" type="Node3D" parent="."]
 script = ExtResource("1_level")
 
-[node name="RoomTone" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("9_tone")
-volume_db = -6.0
-autoplay = true
-bus = &"Ambience"
+[node name="RoomCamera" type="Camera3D" parent="." node_paths=PackedStringArray("level")]
+script = ExtResource("9_camera")
+level = NodePath("../Level")
 
 [node name="Gizmos" type="Node3D" parent="." node_paths=PackedStringArray("level")]
 visible = false
@@ -76,6 +71,7 @@ script = ExtResource("5_gizmos")
 level = NodePath("../Level")
 
 [node name="Lines" type="MeshInstance3D" parent="Gizmos"]
+mesh = SubResource("ImmediateMesh_gizmos")
 script = ExtResource("6_lines")
 
 [node name="Watch" type="Node3D" parent="." node_paths=PackedStringArray("level")]
@@ -83,6 +79,7 @@ script = ExtResource("7_watch")
 level = NodePath("../Level")
 
 [node name="Lines" type="MeshInstance3D" parent="Watch"]
+mesh = SubResource("ImmediateMesh_watch")
 script = ExtResource("6_lines")
 
 [node name="Camera" type="Camera3D" parent="Watch"]
@@ -195,15 +192,6 @@ theme_override_font_sizes/font_size = 24
 text = "F3  gizmos      F4  watch it plan"
 horizontal_alignment = 2
 
-[node name="QualityHint" type="Label" parent="HUD/Stats"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 0.7)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 24
-text = "Q  quality"
-horizontal_alignment = 2
-
 [node name="SettingsHint" type="Label" parent="HUD/Stats"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.7)
@@ -261,31 +249,6 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="NoticeTimer" type="Timer" parent="HUD"]
-wait_time = 1.5
-one_shot = true
-
-[node name="QualityLabel" type="Label" parent="HUD"]
-visible = false
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 0.1
-anchor_right = 0.5
-anchor_bottom = 0.1
-offset_left = -420.0
-offset_top = -26.0
-offset_right = 420.0
-offset_bottom = 26.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
-theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 40
-text = "Quality: High"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="QualityTimer" type="Timer" parent="HUD"]
 wait_time = 1.5
 one_shot = true
 
@@ -429,24 +392,6 @@ max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="Ambience" type="HBoxContainer" parent="HUD/Settings/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="HUD/Settings/Rows/Ambience"]
-custom_minimum_size = Vector2(360, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 40
-text = "Room tone"
-
-[node name="Slider" type="HSlider" parent="HUD/Settings/Rows/Ambience"]
-custom_minimum_size = Vector2(360, 48)
-layout_mode = 2
-size_flags_vertical = 4
-max_value = 1.0
-step = 0.05
-value = 1.0
-
 [node name="HeadBob" type="CheckButton" parent="HUD/Settings/Rows"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
@@ -465,12 +410,6 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.7)
 theme_override_font_sizes/font_size = 28
 text = "Arrows  choose and change      Enter  on / off      O  close"
 horizontal_alignment = 1
-
-[node name="Quality" type="Node" parent="." node_paths=PackedStringArray("world", "label", "timer")]
-script = ExtResource("8_quality")
-world = NodePath("../WorldEnvironment")
-label = NodePath("../HUD/QualityLabel")
-timer = NodePath("../HUD/QualityTimer")
 
 [connection signal="opened" from="HUD/SeedEntry" to="Level" method="_on_seed_entry_opened"]
 [connection signal="closed" from="HUD/SeedEntry" to="Level" method="_on_seed_entry_closed"]

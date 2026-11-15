@@ -17,7 +17,6 @@ func _ready() -> void:
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED # a strip is seen from either side
 	material_override = material
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mesh = ImmediateMesh.new()
 
 ## Forgets the lines of the last frame.
 func begin() -> void:

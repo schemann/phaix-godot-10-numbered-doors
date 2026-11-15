@@ -1,12 +1,12 @@
 extends SceneTree
 ## Measures the deep echo: two seeds whose rooms are the same rooms, shifted by one. When a room's seed is the run's
-## seed plus the room's number, seed 43's room 5 has the seed of seed 42's room 6, so it rolls the same dice, and
-## the whole run of seed 43 is seed 42 one room earlier. Data only, like the other checks: no level is started, the
-## chain is asked for its plans and the plans are compared.
+## seed plus the room's number, seed 43's room 5 has the seed of seed 42's room 6, so it gets the same random
+## numbers, and the whole run of seed 43 is seed 42 one room earlier. Data only, like the other checks: no level
+## is started, the chain is asked for its plans and the plans are compared.
 ##
-##   godot --headless --path godot/11-numbered-doors -s res://steps/step_00_start/check_echo.gd
+##   godot --headless --path godot/10-numbered-doors -s res://steps/step_00_start/check_echo.gd
 ##
-## Options: `-- --seeds=200` measures seeds 1 to 200 (the default), `-- --chain=res://steps/step_03_room_seeds/room_chain.gd`
+## Options: `-- --seeds=200` measures seeds 1 to 200 (the default), `-- --chain=res://steps/step_00_start/room_chain.gd`
 ## measures another step's chain: this is the number before the fix. The exit code is 0 if there is no echo
 ## and 1 if there is, so a build server can run it.
 ##

@@ -1,10 +1,11 @@
 # Numbered Doors in Godot 4
 
-Project files for tutorial 11 of the Godot 4 series by Phaix on YouTube (https://www.youtube.com/@Phaix).
+Project files for tutorial 10 of the Godot 4 series by Phaix on YouTube (https://www.youtube.com/@Phaix).
 
-Put the room number on every door of a Godot 4.7 run whose rooms are built while the game plays. A Label3D on the swinging leaf, a child of the hinge, so the number turns with the door and no code moves it. Z-fighting shown in footage, the depth buffer behind it, and a number floated one centimeter in front of the leaf with 21 steps of margin. A size chosen by measuring: the height of a digit in pixels at 1080p from the farthest corner of the longest room, against the 18 px (PC) and 26 px (TV) text floors of the Xbox Accessibility Guidelines. A number that comes from the generator's plan and never from a counter, proven by a headless walk of 200 seeds, 4000 doors, none with a wrong number, through freed rooms, a restart and a new seed. A readability pass: dark digits, a light rim, no back, contrast ratios measured in the rendered frame, and facing checked in all six room types. The last tutorial of the series. Every step is its own project folder.
+Put the room number on every door of a game like Roblox DOORS in Godot 4.
+A Label3D on the swinging leaf, the number from the generator's plan, and a small number plate built from CSG shapes, lit by the room like the door.
 
-![Screenshot](screenshot.png)
+The Label3D is a child of the door's hinge, so the number swings open with the door and no code moves it. Its digits are about 7 cm tall, read up close like the number on a real door. It floats one centimetre in front of the leaf: right on the face it z-fights, and the video shows why with the depth buffer's steps. The number comes from the plan (the room's index plus one, the room behind the door), never from a counter, so freed rooms, a restart and a new seed cannot make it wrong. Then a plate of CSG boxes and cylinders with a sunken field holds the number: shaded digits in a light beige, a Font Variation of the built in font, and four digits with %04d. Every step is its own project folder.
 
 ## Steps
 
@@ -17,7 +18,7 @@ that step. The project's main scene is the final step.
 | `steps/step_00_start` | Starting point (the final state of the previous tutorial) |
 | `steps/step_01_label_on_the_leaf` | Step 1 - A Label3D on the leaf |
 | `steps/step_02_numbers_from_the_chain` | Step 2 - The number comes from the plan |
-| `steps/step_03_readability_pass` | Step 3 - A readability pass |
+| `steps/step_03_number_plate` | Step 3 - A number plate |
 
 ## Controls
 
@@ -31,6 +32,12 @@ in the video and in the HUD.
 godot --headless --path . -s res://tests/run_tests.gd
 ```
 
+## Support
+
+Support the channel: https://ko-fi.com/phaix or https://github.com/sponsors/schemann
+
 ## License
 
 Code and scenes: MIT (see LICENSE).
+The figure and its animations: Animated Characters Protagonists by Kenney (www.kenney.nl), CC0, see character/License.txt.
+The sounds (footsteps, doors, lock, key): RPG Audio by Kenney (www.kenney.nl, https://kenney.nl/assets/rpg-audio), CC0, see sounds/CREDITS.md.

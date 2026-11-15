@@ -21,12 +21,10 @@ const KeyScene := preload("key.tscn")
 const PlayerScene := preload("player.tscn")
 const Room := preload("room.gd")
 const Seeds := preload("seeds.gd")
-const RoomLighting := preload("room_lighting.gd")
 
 const SPAWN_DEPTH := 1.5 ## Metres inside room 0, so the capsule starts clear of the wall.
-const LIGHTING: RoomLighting = preload("room_lighting.tres") ## How each room type is lit. Data: tune room_lighting.tres.
 
-@export var seed_text := "42" ## The seed as a person types it. Plain digits are that number, any other text is hashed (seeds.gd).
+@export var seed_text := "42" ## The seed as you type it. Plain digits are that number, any other text is hashed (seeds.gd).
 @export_range(1, 500) var goal_room := 20 ## The room the run ends in.
 @export_range(0.0, 1.0) var lock_chance := 0.4 ## The chance for a room to be locked. Its key lies in the same room.
 @export var save_path := "user://best_times.json" ## Tests and recordings point it at a temporary file.
@@ -109,6 +107,7 @@ func _spawn_room(plan: Chain.Plan) -> void:
 	rooms[plan.index] = room
 	if room.door != null: # the goal room has no door
 		room.door.opened.connect(_on_door_opened.bind(plan.index))
+		room.door.closed.connect(_on_door_closed.bind(plan.index))
 		room.door.unlock_requested.connect(_on_unlock_requested.bind(room.door))
 	room.inside.body_entered.connect(_on_room_entered.bind(plan.index))
 	if room.goal_pad != null:
@@ -119,7 +118,7 @@ func _spawn_room(plan: Chain.Plan) -> void:
 	if plan.key_spot >= 0:
 		_spawn_key(room, room.key_spots[plan.key_spot])
 	_spawn_props(room, plan)
-	room.light_up(Chain.LAMP_TINTS[plan.lamp], LIGHTING, plan.type) # the plan's tint, the room type's energy, shadows and size
+	room.set_lamp_tint(Chain.LAMP_TINTS[plan.lamp]) # the plan's lamp number is a colour of the table
 
 ## The key becomes a child of the room, so it goes away with the room.
 func _spawn_key(room: Room, spot: Marker3D) -> void:
@@ -138,11 +137,11 @@ func _spawn_props(room: Room, plan: Chain.Plan) -> void:
 		prop.transform = room.prop_spots[i].transform
 		room.add_child(prop)
 
-## The key is gone the moment it is touched, so its chime is the player's: a sound in the player's hands, not in the room.
+## The key is gone the moment it is touched, so its sound is the player's: a sound in the player's hands, not in the room.
 func _on_key_picked_up() -> void:
 	keys += 1
+	(player.get_node("KeyPickup") as AudioStreamPlayer).play()
 	keys_changed.emit(keys)
-	(player.get_node("KeyChime") as AudioStreamPlayer).play()
 
 ## Somebody walked up to a locked door. The rule is here and nowhere else: a key unlocks a door and
 ## is used up. The door then opens by itself (it checks its lock again after asking).
@@ -165,17 +164,25 @@ func _on_door_opened(index: int) -> void:
 	if index == chain.plans.size() - 1:
 		_spawn_room(chain.next_plan())
 
-## The player stepped into a room: close the door behind the player and forget the old rooms.
+## The player stepped into a room: close the door behind the player.
 func _on_room_entered(_body: Node3D, index: int) -> void:
 	if index <= current:
 		return
 	current = index
 	room_entered.emit(current)
 	rooms[current - 1].door.close()
+
+## A door has swung shut, nobody sees past it now: forget the rooms behind it. Its trigger is on
+## the side the player left, so it stays shut. The wall in its own room is defensive: nothing
+## behind a shut door ever shows, whoever looks.
+func _on_door_closed(index: int) -> void:
+	if not rooms.has(index): # a restart was faster than the door
+		return
 	for old: int in rooms.keys():
-		if old < current - 1:
+		if old < index:
 			rooms[old].queue_free()
 			rooms.erase(old)
+	rooms[index].seal_entrance()
 
 func _on_goal_reached(_body: Node3D) -> void:
 	if state == State.RUNNING:

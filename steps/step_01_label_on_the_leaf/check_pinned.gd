@@ -4,7 +4,7 @@ extends SceneTree
 ## remembers what a few seeds looked like when the generator was right, and fails loudly when they look different.
 ## Data only: no level is started, the chain is asked for its plans and the plans are compared with PINNED.
 ##
-##   godot --headless --path godot/11-numbered-doors -s res://steps/step_01_label_on_the_leaf/check_pinned.gd
+##   godot --headless --path godot/10-numbered-doors -s res://steps/step_01_label_on_the_leaf/check_pinned.gd
 ##
 ## Options: `-- --chain=res://steps/step_01_label_on_the_leaf/accidental_change.gd` checks another chain (this one is a
 ## generator that was changed by accident). `-- --print` prints the pins of the chain as they stand now, ready to paste

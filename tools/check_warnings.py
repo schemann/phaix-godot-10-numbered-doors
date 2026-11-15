@@ -7,7 +7,7 @@ of every .gd file. Needs `godot` on the PATH.
 Usage: tools/check_warnings.py [project dir]   (default: the project this file is in)"""
 import json, os, socket, subprocess, sys, time
 
-project = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), ".."))
+project = os.path.realpath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), ".."))  # the server names files by their real path
 with socket.socket() as probe:  # a free port for the language server
     probe.bind(("127.0.0.1", 0))
     port = probe.getsockname()[1]
@@ -69,8 +69,8 @@ try:
               "params": {"textDocument": {"uri": "file://" + f, "languageId": "gdscript", "version": 1,
                                           "text": open(f).read()}}})
     seen = {}
-    quiet = time.time() + 5
-    deadline = time.time() + 60
+    quiet = time.time() + 20  # the first answer comes after the server has parsed the opened files
+    deadline = time.time() + 120
     while time.time() < deadline and time.time() < quiet:
         for m in read_messages():
             if m.get("method") == "textDocument/publishDiagnostics":

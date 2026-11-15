@@ -1,10 +1,12 @@
 extends Node3D
 ## A hinged door. It swings away from the player who walks up to it.
 ## A locked door only asks: it never knows what a key is, the level answers.
-## Every move it makes has a sound, played where the door is (AudioStreamPlayer3D, bus SFX): the creak of opening,
-## the thud of closing, the rattle of the lock. The sound starts on the same frame as the move.
+## Every move it makes has a sound, played where the door is (AudioStreamPlayer3D, bus SFX): one for opening, one for
+## closing, one for the lock. The sounds are recordings (sounds/CREDITS.md). Each starts on the same frame as its move,
+## except the closing one, which waits so that its thud lands as the door reaches the frame.
 
 signal opened ## Emitted as the door starts to swing open.
+signal closed ## Emitted when the door has swung shut. Opened again on the way, it never comes.
 signal unlock_requested ## Somebody walked up to a locked door. Whoever listens may answer with unlock().
 
 const OPEN_ANGLE := -PI / 2.0 ## Away from the player, into the next room.
@@ -17,6 +19,7 @@ const FLASH_ENERGY := 5.0 ## Emission of the lock at the first instant of the fl
 const FLASH_TIME := 0.4 ## Seconds for the flash to fade.
 const DROP_DISTANCE := 0.6 ## Metres the lock falls when the door is unlocked.
 const DROP_TIME := 0.3 ## Seconds.
+const CLOSE_THUD := 0.2 ## Seconds into door_close.ogg where the thud is.
 
 @export var locked := false ## A locked door does not open on approach. See lock() and unlock().
 
@@ -34,10 +37,10 @@ var _flash_material: StandardMaterial3D ## A private copy of the lock material, 
 @onready var swing: Area3D = $Swing ## Where the door sweeps through when it moves.
 @onready var lock_block: Node3D = $Hinge/Lock ## The plate and the bar on the panel. Shown while the door is locked.
 @onready var lock_meshes: Array[MeshInstance3D] = [$Hinge/Lock/Bar, $Hinge/Lock/Plate]
+@onready var open_sound: AudioStreamPlayer3D = $OpenSound ## Plays as the door starts to swing open.
+@onready var close_sound: AudioStreamPlayer3D = $CloseSound ## Its thud lands in the frame as the swing ends.
+@onready var lock_sound: AudioStreamPlayer3D = $LockSound ## A click, as the locked door gives under the push.
 @onready var _lock_rest_y := lock_block.position.y ## Where the lock sits on the panel.
-@onready var open_sound: AudioStreamPlayer3D = $OpenSound ## The latch and the creak of the hinge while it swings.
-@onready var close_sound: AudioStreamPlayer3D = $CloseSound ## A short creak, then the thud in the frame as the swing ends.
-@onready var lock_sound: AudioStreamPlayer3D = $LockSound ## Three clanks, one for each push of the rattle.
 
 func _ready() -> void:
 	lock_block.visible = locked
@@ -56,15 +59,16 @@ func _physics_process(_delta: float) -> void:
 		_close_pending = false
 		is_open = false
 		_swing_to(0.0)
-		close_sound.play()
+		_tween.parallel().tween_callback(close_sound.play).set_delay(SWING_TIME - CLOSE_THUD)
+		_tween.tween_callback(closed.emit)
 
 func open() -> void:
 	_close_pending = false
 	if is_open:
 		return
 	is_open = true
-	_swing_to(OPEN_ANGLE)
 	open_sound.play()
+	_swing_to(OPEN_ANGLE)
 	opened.emit()
 
 func lock() -> void:
@@ -93,10 +97,10 @@ func rattle() -> void:
 	if _tween != null:
 		_tween.kill()
 	_tween = create_tween().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	lock_sound.play()
 	for strength in RATTLE_STRENGTHS:
 		_tween.tween_property(hinge, "rotation:y", RATTLE_ANGLE * strength, RATTLE_OUT_TIME)
 		_tween.tween_property(hinge, "rotation:y", 0.0, RATTLE_BACK_TIME)
-	lock_sound.play()
 	_flash_lock()
 
 ## The lock material is shared by every door, so the flash goes through a private copy of it.

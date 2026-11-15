@@ -25,6 +25,7 @@ const MIN_VIEW := 24.0 ## Metres of floor the camera shows at least: room 0 alon
 var watching := false
 var chain: Chain ## The chain of this watch, not the level's.
 
+var _view_before: Camera3D ## The camera that had the view when the watch started: the player's, or the room camera (V).
 var _ticket := 0 ## Counts the watches. A coroutine cannot be stopped from outside, so it keeps the ticket it started with and quits when it is no longer the latest.
 var _shown := 0 ## How many plans of the chain are on the screen. The chain plans a room before the watch shows it.
 var _rejection: Chain.Rejection ## The turned-down room that is on the screen right now, or null.
@@ -69,6 +70,7 @@ static func rejection_text(rejection: Chain.Rejection) -> String:
 func _enter() -> void:
 	watching = true
 	_set_shown(true)
+	_view_before = get_viewport().get_camera_3d()
 	camera.make_current()
 	_begin()
 
@@ -76,7 +78,7 @@ func _leave() -> void:
 	watching = false
 	_ticket += 1 # the running coroutine quits at its next await
 	_set_shown(false)
-	camera.clear_current() # the player's camera takes over again
+	_view_before.make_current() # the camera that had the view takes it back
 
 ## A fresh chain for the level's seed, and a fresh coroutine to plan it.
 func _begin() -> void:

@@ -1,9 +1,9 @@
 extends RefCounted
 ## Walks the real player from door to door through the input actions only (look_*
-## and move_forward), like a person with a gamepad. Never teleports and never sets
-## a transform. Used by the tests and by tools/capture.gd with the levels of the steps.
+## and move_forward), like a player with a gamepad. Never teleports and never sets
+## a transform. Used by the tests with the levels of the steps.
 ## In the goal room, which has no door, it walks onto the goal pad.
-## Tutorial 04's, unchanged for tutorials 05 to 11: in a room whose door is locked it first walks to the key (a child of the room,
+## Tutorial 04's, unchanged for tutorials 05 to 10: in a room whose door is locked it first walks to the key (a child of the room,
 ## named Key) and picks it up by walking into it, then goes to the door.
 ## Call physics_step() once per physics frame.
 

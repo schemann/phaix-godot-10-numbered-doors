@@ -3,7 +3,7 @@ extends "room_chain.gd"
 ## and takes the spacing out. Every room still fits, no room overlaps, every lock still has its key and the game still
 ## plays, but the runs of a lot of seeds are not the runs they were.
 ##
-##   godot --headless --path godot/11-numbered-doors -s res://steps/step_02_numbers_from_the_chain/check_pinned.gd \
+##   godot --headless --path godot/10-numbered-doors -s res://steps/step_02_numbers_from_the_chain/check_pinned.gd \
 ##     -- --chain=res://steps/step_02_numbers_from_the_chain/accidental_change.gd
 
 func _vault_too_soon() -> bool:

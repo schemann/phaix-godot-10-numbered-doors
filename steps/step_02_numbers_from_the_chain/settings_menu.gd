@@ -20,7 +20,6 @@ var _mutes_before: Array[bool] = []
 
 @onready var master_slider: HSlider = $Rows/Master/Slider
 @onready var sfx_slider: HSlider = $Rows/Sfx/Slider
-@onready var ambience_slider: HSlider = $Rows/Ambience/Slider
 @onready var head_bob_check: CheckButton = $Rows/HeadBob
 @onready var fov_kick_check: CheckButton = $Rows/FovKick
 
@@ -31,10 +30,9 @@ func _ready() -> void:
 	settings = Settings.new(save_path)
 	master_slider.value = settings.master_volume
 	sfx_slider.value = settings.sfx_volume
-	ambience_slider.value = settings.ambience_volume
 	head_bob_check.button_pressed = settings.head_bob
 	fov_kick_check.button_pressed = settings.fov_kick
-	for control: Range in [master_slider, sfx_slider, ambience_slider]:
+	for control: Range in [master_slider, sfx_slider]:
 		control.value_changed.connect(_on_changed.unbind(1))
 	for control: BaseButton in [head_bob_check, fov_kick_check]:
 		control.toggled.connect(_on_changed.unbind(1))
@@ -74,7 +72,6 @@ func close() -> void:
 func _on_changed() -> void:
 	settings.master_volume = master_slider.value
 	settings.sfx_volume = sfx_slider.value
-	settings.ambience_volume = ambience_slider.value
 	settings.head_bob = head_bob_check.button_pressed
 	settings.fov_kick = fov_kick_check.button_pressed
 	apply()
@@ -83,7 +80,6 @@ func _on_changed() -> void:
 func apply() -> void:
 	_set_volume("Master", settings.master_volume)
 	_set_volume("SFX", settings.sfx_volume)
-	_set_volume("Ambience", settings.ambience_volume)
 	var camera := level.player.get_node("Head/Camera3D") as CameraFeel
 	camera.head_bob = settings.head_bob
 	camera.fov_kick = settings.fov_kick
